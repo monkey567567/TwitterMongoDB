@@ -1,23 +1,28 @@
-import json
 from pymongo import MongoClient
 import sys
+import os
+from pymongo.collation import Collation
 
 
 #perhaps a try execepy block here
 client = MongoClient('mongodb://localhost:{}'.format(sys.argv[2]))
 
 db = client["291db"]
-tweetscollection = db["tweets"]
 
-tweetscollection.delete_many({})
+if 'tweets' in db.list_collection_names():
+        db.drop_collection('tweets')
+        
+tweets_collection = db['tweets']
 
-json_file = sys.argv[1]
 
 
 
-with open(json_file, "r") as file:
-    data = json.load(file)
-    
-tweets = data["tweets"]
-tweetscollection.insert_many(tweets)
+f = open(sys.argv[1], "r+")
+
+
+# mongoimport --host "hostname" --port "port" --db "databasename" --collection "collectionName" --file "filePath"
+os.system("mongoimport --host localhost --port {} --db 291db --collection tweets --file {}".format(sys.argv[2],sys.argv[1])) 
+tweets_collection.create_index("content", collation = Collation(locale = "en", strength = 4))
+tweets_collection.create_index("user.displayname", collation = Collation(locale = "en", strength = 4))
+tweets_collection.create_index("user.location", collation = Collation(locale = "en", strength = 4))
 
