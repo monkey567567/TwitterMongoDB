@@ -80,7 +80,8 @@ def list_users(tweetscollection):
         if results[i]["user"]["username"].lower() not in shown:
             shown.append(results[i]["user"]["username"].lower())
             print("Username: %s" % results[i]["user"]["username"])
-            print("Display name: %s" % results[i]["user"]["displayname"])
+            if results[i]["user"]["displayname"]:
+                print("Display name: %s" % results[i]["user"]["displayname"])
             print("Followers count: %d" % results[i]["user"]["followersCount"])
             print("")
             limit += 1
