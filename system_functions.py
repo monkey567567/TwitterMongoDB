@@ -1,3 +1,4 @@
+import pymongo
 from pymongo.collation import Collation
 from datetime import datetime
 
@@ -46,8 +47,71 @@ def search_users(tweetscollection):
         else:
             print("\nusername doesn't exist in the current search\n")
     
-def list_tweets(tweetscollection):
-    pass
+def list_tweets(collection):
+    print("\n//////// LIST TOP TWEETS ////////\n")
+
+    # Get user input for the field and number of tweets to display
+    print(("-")*30+"\n"+"1: retweetCount\n2: likeCount\n3: quoteCount"+"\n"+("-")*30)
+    user_choice = input("Input: ")
+
+    # Map user's input to the corresponding field
+    field_mapping = {"1": "retweetCount", "2": "likeCount", "3": "quoteCount"}
+    field = field_mapping.get(user_choice)
+
+    # Validate user input
+    if not field:
+        print("Invalid choice. Please enter 1, 2, or 3.")
+        return
+
+    n = int(input("Enter the number of tweets to display: "))
+
+    # Define the projection to include only relevant fields
+    projection = {
+        "_id": 0,
+        "id": 1,
+        "date": 1,
+        "content": 1,
+        "user.username": 1,
+        field: 1
+    }
+
+    # Sort by the selected field in descending order
+    sort_field = "-" + field
+
+    # Retrieve the top N tweets based on the selected field
+    top_tweets = collection.find({}, projection).sort(field, pymongo.DESCENDING).limit(n)
+    
+    print("------------------------")
+    # Display the streamlined results
+    for tweet in top_tweets:
+        print(f"Tweet ID: {tweet['id']}")
+        print(f"Date: {tweet['date']}")
+        print(f"Content: {tweet['content']}")
+        print(f"Username: {tweet['user']['username']}")
+        
+        # Print the selected field and its value
+        selected_field_value = tweet.get(field, None)
+        print(f"Selected Field ({field}): {selected_field_value}")
+        
+        print("------------------------")
+
+
+    # Allow the user to select a tweet and see all fields
+    selected_tweet_id = input("\nEnter the ID of the tweet to view all fields (or press Enter to skip): ").strip()
+    if selected_tweet_id:
+        selected_tweet = collection.find_one({"id": int(selected_tweet_id)})
+        if selected_tweet:
+            print("\nSelected Tweet:")
+            for key, value in selected_tweet.items():
+                if isinstance(value, dict):
+                    print(f"{key}:")
+                    for sub_key, sub_value in value.items():
+                        print(f"  {sub_key}: {sub_value}")
+                else:
+                    print(f"{key}: {value}")
+            print("------------------------")
+        else:
+            print("\nTweet not found.")
 
 def list_users(tweetscollection):
     # This function displays the top n users based on followersCount (n is inputted by the user)
