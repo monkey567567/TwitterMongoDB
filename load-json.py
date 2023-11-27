@@ -21,7 +21,7 @@ f = open(sys.argv[1], "r+")
 
 
 # mongoimport --host "hostname" --port "port" --db "databasename" --collection "collectionName" --file "filePath"
-os.system("mongoimport --host localhost --port {} --db 291db --collection tweets --file {}".format(sys.argv[2],sys.argv[1])) 
+os.system("mongoimport --port {} --db 291db --collection tweets --file {}".format(sys.argv[2],sys.argv[1])) 
 tweets_collection.create_index("content", collation = Collation(locale = "en", strength = 4))
 tweets_collection.create_index("user.displayname", collation = Collation(locale = "en", strength = 4))
 tweets_collection.create_index("user.location", collation = Collation(locale = "en", strength = 4))

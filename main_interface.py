@@ -10,8 +10,6 @@ def main():
     client = MongoClient('mongodb://localhost:{}'.format(sys.argv[1]))
     db = client["291db"]
     tweetscollection = db["tweets"]
-
-
     main_loop = True
     while main_loop:
         print("\n//////// MAIN_MENU ////////\n")
