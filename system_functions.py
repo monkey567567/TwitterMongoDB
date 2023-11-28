@@ -3,13 +3,24 @@ from pymongo.collation import Collation
 from datetime import datetime
 
 def search_tweets(tweetscollection):
+    '''
+    he user should be able to provide one or more keywords, \
+    and the system should retrieve all tweets that match all those keywords (AND semantics). 
+    A keyword matches if it appears in the content field. For each matching tweet, display the id, date, content, and username of the person who posted it.
+    The user should be able to select a tweet and see all fields.
+
+
+    '''
     print("\n//////// SEARCH FOR TWEETS ////////\n")
     words = input("Enter keyword(s): ").lower().split()
+    #split words based on the spacing
+    #if the string isn't empty
     if len(words) != 0:
         query = {'$and': [{'content': {'$regex': word, '$options': 'i'}} for word in words]}
-        
+        #creates a bunch of regex queries and if they all work, then select the specific document.
         search = tweetscollection.find(query, collation=Collation(locale='en', strength=4))
         count = tweetscollection.count_documents(query, collation=Collation(locale='en', strength=4))
+        #gets the count of the documents 
         search = list(search)
         if count != 0:        
             for tweet in search:
@@ -22,6 +33,7 @@ def search_tweets(tweetscollection):
                 if tweet_selected == "q":
                     running = False
                 else:
+                    #checks if the selected input is in the list displayed above
                     if check_tweet_select(search, tweet_selected):
                         tweet_info = tweetscollection.find_one({"id":int(tweet_selected)})
                         print("\ntweet_info:" , tweet_info, "\n")
@@ -35,15 +47,23 @@ def search_tweets(tweetscollection):
         print("\nno tweets\n")
         
 def search_users(tweetscollection):
+    '''
+    The user should be able to provide a keyword  
+    and see all users whose displayname or location contain the keyword. 
+    For each user, list the username, displayname, and location with no duplicates. 
+    The user should be able to select a user and see full information about the user.
+
+    '''
     print("\n//////// SEARCH FOR USERS ////////\n")
     words = input("Enter one keyword: ").lower().split()
     if len(words) != 0:
         word = words[0]
-        
+        #the queries search for one word using the regex in both displayname and location.
         query = { '$or': [{'user.displayname': {'$regex': word, '$options': 'i'}}, {'user.location': {'$regex': word, '$options': 'i'}}]}
         search = tweetscollection.find(query, collation=Collation(locale='en', strength=4))
         search = list(search)
         seen = []
+        #puts users who haven't been seen before to the seen list. if it finds a user with higher followercount, replace it with the one in the seen list
         for user in search:
             seen_usernames = [u["username"] for u in seen]
             if user["user"]["username"] not in seen_usernames:
@@ -63,7 +83,9 @@ def search_users(tweetscollection):
             if user_input == "q":
                 running = False
             else:
+                #checks if the selected user is in the items displayed
                 if check_user_select(seen,user_input):
+                    #searches for a user that is equal to the user input and then sorts by followercount, and limit the document to 1
                     user_info = tweetscollection.find({"user.username":user_input},{"user":1}).sort("user.followersCount", -1).limit(1)
                     for user in user_info:
                         print("\nuser_info:" , user, "\n")
