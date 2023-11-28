@@ -3,68 +3,108 @@ from pymongo.collation import Collation
 from datetime import datetime
 
 def search_tweets(tweetscollection):
-   
+    print("\n//////// SEARCH FOR TWEETS ////////\n")
     words = input("Enter keyword(s): ").lower().split()
-    query = {'$and': [{'content': {'$regex': word, '$options': 'i'}} for word in words]}
-    
-    search = tweetscollection.find(query, collation=Collation(locale='en', strength=4))
-                    
-    for tweet in search:
-        print("\n")
-        print("tweet_id: ", tweet["id"],"\ndate: ", tweet["date"], "\ncontent: ", tweet["content"], "\nusername: ", tweet["user"]["username"], "\n")
+    if len(words) != 0:
+        query = {'$and': [{'content': {'$regex': word, '$options': 'i'}} for word in words]}
         
-    running = True
-    while running:
-        tweet_selected = int(input("\nEnter tweet_id: "))
-        if check_tweet_select(search, tweet_selected):
-            tweet_info = tweetscollection.find_one({"id":tweet_selected})
-            print("\ntweet_info:" , tweet_info, "\n")
-            running = False
+        search = tweetscollection.find(query, collation=Collation(locale='en', strength=4))
+        count = tweetscollection.count_documents(query, collation=Collation(locale='en', strength=4))
+        search = list(search)
+        if count != 0:        
+            for tweet in search:
+                print("\n")
+                print("tweet_id: ", tweet["id"],"\ndate: ", tweet["date"], "\ncontent: ", tweet["content"], "\nusername: ", tweet["user"]["username"], "\n")
+                
+            running = True
+            while running:
+                tweet_selected = input("\nEnter tweet_id  or q to go back to menu: ")
+                if tweet_selected == "q":
+                    running = False
+                else:
+                    if check_tweet_select(search, tweet_selected):
+                        tweet_info = tweetscollection.find_one({"id":int(tweet_selected)})
+                        print("\ntweet_info:" , tweet_info, "\n")
+                        running = False
+                    else:
+                        
+                        print("\ntweet id doesn't exist in the current searchh\n")
         else:
-            print("\ntweet id doesn't exist in the current search\n")
+            print("\nNo tweets found\n")
+    else:
+        print("\nno tweets\n")
         
 def search_users(tweetscollection):
+    print("\n//////// SEARCH FOR USERS ////////\n")
     words = input("Enter one keyword: ").lower().split()
-    word = words[0]
-    
-    query = { '$or': [{'user.displayname': {'$regex': word, '$options': 'i'}}, {'user.location': {'$regex': word, '$options': 'i'}}]}
-    search = tweetscollection.find(query, collation=Collation(locale='en', strength=4))
-    
-    seen = []
-    for user in search:
-        if user["user"]["username"] not in seen:
-            seen.append(user["user"]["username"])
+    if len(words) != 0:
+        word = words[0]
+        
+        query = { '$or': [{'user.displayname': {'$regex': word, '$options': 'i'}}, {'user.location': {'$regex': word, '$options': 'i'}}]}
+        search = tweetscollection.find(query, collation=Collation(locale='en', strength=4))
+        search = list(search)
+        seen = []
+        for user in search:
+            seen_usernames = [u["username"] for u in seen]
+            if user["user"]["username"] not in seen_usernames:
+                seen.append(user["user"])
+            elif user["user"]["username"] in seen_usernames:
+                index = seen_usernames.index(user["user"]["username"])
+                if user["user"]["followersCount"] > seen[index]["followersCount"]:
+                    seen[index] = user["user"]
+                    
+        for user in seen:
             print("\n")
-            print("username:  ", user["user"]["username"], "\ndisplayname: ", user["user"]["displayname"], "\nlocation: ", user["user"]["location"], "\n")
-            
-    running = True
-    while running:
-        user_input = input("\nEnter username: ")
-        if check_user_select(seen,user_input):
-            user_info = tweetscollection.find_one({"user.username":user_input},{"user":1})
-            print("\nuser_info:" , user_info, "\n")
-            running = False
-        else:
-            print("\nusername doesn't exist in the current search\n")
+            print("username:  ", user["username"], "\ndisplayname: ", user["displayname"], "\nlocation: ", user["location"], "\n")
+        
+        running = True
+        while running:
+            user_input = input("\nEnter username or q to go back to menu: ")
+            if user_input == "q":
+                running = False
+            else:
+                if check_user_select(seen,user_input):
+                    user_info = tweetscollection.find({"user.username":user_input},{"user":1}).sort("user.followersCount", -1).limit(1)
+                    for user in user_info:
+                        print("\nuser_info:" , user, "\n")
+                    running = False
+                else:
+                    print("\nusername doesn't exist in the current search\n")
+    else:
+        print("\nno users\n")
     
 def list_tweets(collection):
     print("\n//////// LIST TOP TWEETS ////////\n")
 
     # Get user input for the field and number of tweets to display
     print(("-")*30+"\n"+"1: retweetCount\n2: likeCount\n3: quoteCount"+"\n"+("-")*30)
-    user_choice = input("Input: ")
+    running = True
+    
+    while running:
+        user_choice = input("Input: ")
 
-    # Map user's input to the corresponding field
-    field_mapping = {"1": "retweetCount", "2": "likeCount", "3": "quoteCount"}
-    field = field_mapping.get(user_choice)
+        # Map user's input to the corresponding field
+        field_mapping = {"1": "retweetCount", "2": "likeCount", "3": "quoteCount"}
+        field = field_mapping.get(user_choice)
 
-    # Validate user input
-    if not field:
-        print("Invalid choice. Please enter 1, 2, or 3.")
-        return
-
-    n = int(input("Enter the number of tweets to display: "))
-
+        # Validate user input
+        if not field:
+            print("Invalid choice. Please enter 1, 2, or 3.")
+        else:
+            running = False
+    
+    running2 = True
+    while running2:
+        n = input("Enter the number of tweets to display: ")
+        if n.isdigit():
+            n = int(n)
+            if n < 1:
+                print("Invalid choice. Please enter a positive integer.")
+            else:
+                running2 = False
+        else:
+            print("Invalid choice. Please enter a positive integer.")
+    
     # Define the projection to include only relevant fields
     projection = {
         "_id": 0,
@@ -79,8 +119,8 @@ def list_tweets(collection):
     sort_field = "-" + field
 
     # Retrieve the top N tweets based on the selected field
-    top_tweets = collection.find({}, projection).sort(field, pymongo.DESCENDING).limit(n)
-    
+    top_tweets = collection.find({}, projection).sort(field, -1).limit(n)
+    top_tweets = list(top_tweets)
     print("------------------------")
     # Display the streamlined results
     for tweet in top_tweets:
@@ -95,23 +135,20 @@ def list_tweets(collection):
         
         print("------------------------")
 
-
+    running3 = True
+    while running3:
     # Allow the user to select a tweet and see all fields
-    selected_tweet_id = input("\nEnter the ID of the tweet to view all fields (or press Enter to skip): ").strip()
-    if selected_tweet_id:
-        selected_tweet = collection.find_one({"id": int(selected_tweet_id)})
-        if selected_tweet:
-            print("\nSelected Tweet:")
-            for key, value in selected_tweet.items():
-                if isinstance(value, dict):
-                    print(f"{key}:")
-                    for sub_key, sub_value in value.items():
-                        print(f"  {sub_key}: {sub_value}")
-                else:
-                    print(f"{key}: {value}")
-            print("------------------------")
+        selected_tweet_id = input("\nEnter the ID of the tweet to view all fields (or press q to skip: ").strip()
+        if selected_tweet_id == "q":
+            running3 =  False
         else:
-            print("\nTweet not found.")
+            if check_tweet_select(top_tweets, selected_tweet_id):
+                selected_tweet = collection.find_one({"id": int(selected_tweet_id)})
+                if selected_tweet:
+                    print("\nSelected Tweet:", selected_tweet)
+                    running3 = False
+            else:
+                print("\nTweet not in the list above.")
 
 def list_users(tweetscollection):
     # This function displays the top n users based on followersCount (n is inputted by the user)
@@ -126,23 +163,26 @@ def list_users(tweetscollection):
             n = int(n)
         except Exception:
             print("Invalid input.")
-            n = input("Enter the number of accounts you would like to see: ")
+            n = input("Enter the number of accounts you would like to see:\n ")
+            
             continue
         # check if the integers is within range of 0 to the number of documents
         if n > length or n < 0:
             print("Invalid input.")
             n = input("Enter the number of accounts you would like to see: ")
+            
         else:
             break
     # sort the documents by followersCount
-    results = tweetscollection.find().sort("user.followersCount", -1)
+    results = tweetscollection.find().sort("user.followersCount", -1).limit(n)
+    
     shown = []  # keep track of possible duplicates
     i = 0
     limit = 0
     # display top n accounts
     while limit < n and i < length:
-        if results[i]["user"]["username"].lower() not in shown:
-            shown.append(results[i]["user"]["username"].lower())
+        if results[i]["user"]["username"] not in shown:
+            shown.append(results[i]["user"]["username"])
             print("Username: %s" % results[i]["user"]["username"])
             if results[i]["user"]["displayname"]:
                 print("Display name: %s" % results[i]["user"]["displayname"])
@@ -151,60 +191,21 @@ def list_users(tweetscollection):
             limit += 1
         i += 1
     # prompt user for the username of an account they would like to see more information about
-    select_user = input("Enter a username to see more information: ").lower()
-    validUser = False
-    while not validUser:
-        for username in shown:
-            if select_user == username:
-                validUser = True
-                break
-        if validUser:
-            break
+    print(shown)
+    running = True
+    while running:
+        select_user = input("Enter a username to see more information or q to go back to menu:  ")
+        if select_user == "q":
+            running = False
+            return
         else:
-            print("Invalid username.")
-            select_user = input("Enter a username to see more information: ").lower()
-    # display all user information
-    for acc in results:
-        if acc["user"]["username"].lower() == select_user:
-            print("Username: %s" % acc["user"]["username"])
-            if acc["user"]["displayname"]:
-                print("Display name: %s" % acc["user"]["displayname"])
-            if acc["user"]["id"]:
-                print("ID: %d" % acc["user"]["id"])
-            if acc["user"]["description"]:
-                print("Description: %s" % acc["user"]["description"])
-            if acc["user"]["verified"]:
-                print("Verified")
+            if select_user in shown :
+                user_info = tweetscollection.find({"user.username":select_user},{"user":1}).sort("user.followersCount", -1).limit(1)
+                for user in user_info:
+                    print("\nuser_info:" , user, "\n")
+                running = False  
             else:
-                print("Not verified")
-            if acc["user"]["created"]:
-                print("Date created: %s" % acc["user"]["created"])
-            if acc["user"]["followersCount"]:
-                print("Followers count: %d" % acc["user"]["followersCount"])
-            if acc["user"]["friendsCount"]:
-                print("Friends count: %d" % acc["user"]["friendsCount"])
-            if acc["user"]["statusesCount"]:
-                print("Statuses count: %d" % acc["user"]["statusesCount"])
-            if acc["user"]["favouritesCount"]:
-                print("Favourites count: %d" % acc["user"]["favouritesCount"])
-            if acc["user"]["listedCount"]:
-                print("Listed count: %d" % acc["user"]["listedCount"])
-            if acc["user"]["mediaCount"]:
-                print("Media count: %d" % acc["user"]["mediaCount"])
-            if acc["user"]["location"] != "":
-                print("Location: %s" % acc["user"]["location"])
-            if acc["user"]["protected"]:
-                print("Protected")
-            if acc["user"]["linkUrl"]:
-                print("Link URL: %s" % acc["user"]["linkUrl"])
-            if acc["user"]["linkTcourl"]:
-                print("Link t.co URL: %s" % acc["user"]["linkTcourl"])
-            if acc["user"]["profileImageUrl"]:
-                print("Profile Image URL: %s" % acc["user"]["profileImageUrl"])
-            if acc["user"]["profileBannerUrl"]:
-                print("Profile Banner URL: %s" % acc["user"]["profileBannerUrl"])
-            if acc["user"]["url"]:
-                print("URL: %s" % acc["user"]["url"])
+                print("\nusername doesn't exist in the current search\n")      
     return
 
 def compose_tweet(tweetscollection):
@@ -216,7 +217,6 @@ def compose_tweet(tweetscollection):
     date = datetime.now().strftime("%Y-%m-%dT%H:%M:%S+00:00")
     # create the new tweet document
     new_tweet = {
-    "url": None,
     "date": date,
     "content": content,
     "renderedContent": content,
@@ -273,18 +273,20 @@ def compose_tweet(tweetscollection):
 
 def check_tweet_select(list_items, user_input):
     exist = False
-    
-    for i in list_items:
-        if i["id"] == int(user_input):
-            exist = True
-            return exist
+    if user_input.isdigit() == False:
+        return exist
+    else:
+        for i in list(list_items):
+            if i["id"] == int(user_input):
+                exist = True 
+                return exist
+        
     return exist
 
 def check_user_select(list_items, user_input):
     exist = False
-    
     for i in list_items:
-        if i == user_input:
+        if i["username"] == user_input:
             exist = True
             return exist
     return exist
