@@ -204,7 +204,7 @@ def list_users(tweetscollection):
         else:
             break
     # sort the documents by followersCount
-    results = tweetscollection.find().sort("user.followersCount", -1).limit(n)
+    results = tweetscollection.find().sort("user.followersCount", -1)
     
     shown = []  # keep track of possible duplicates
     i = 0
