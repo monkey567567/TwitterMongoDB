@@ -24,8 +24,12 @@ def search_tweets(tweetscollection):
         search = list(search)
         if count != 0:        
             for tweet in search:
-                print("\n")
-                print("tweet_id: ", tweet["id"],"\ndate: ", tweet["date"], "\ncontent: ", tweet["content"], "\nusername: ", tweet["user"]["username"], "\n")
+                if tweet["id"] is None :
+                    print("\n")
+                    print("tweet_id: ","\ndate: ", tweet["date"], "\ncontent: ", tweet["content"], "\nusername: ", tweet["user"]["username"], "\n")
+                else:
+                    print("\n")
+                    print("tweet_id: ", tweet["id"],"\ndate: ", tweet["date"], "\ncontent: ", tweet["content"], "\nusername: ", tweet["user"]["username"], "\n")
                 
             running = True
             while running:
@@ -74,8 +78,12 @@ def search_users(tweetscollection):
                     seen[index] = user["user"]
                     
         for user in seen:
-            print("\n")
-            print("username:  ", user["username"], "\ndisplayname: ", user["displayname"], "\nlocation: ", user["location"], "\n")
+            if user["displayname"] is None :
+                print("\n")
+                print("username:  ", user["username"], "\ndisplayname: ", "\nlocation: ", user["location"], "\n")
+            else:
+                print("\n")
+                print("username:  ", user["username"], "\ndisplayname: ", user["displayname"], "\nlocation: ", user["location"], "\n")
         
         running = True
         while running:
@@ -152,10 +160,15 @@ def list_tweets(collection):
     print("------------------------")
     # Display the streamlined results
     for tweet in top_tweets:
-        print(f"Tweet ID: {tweet['id']}")
-        print(f"Date: {tweet['date']}")
-        print(f"Content: {tweet['content']}")
-        print(f"Username: {tweet['user']['username']}")
+        if tweet["id"] is None :
+            print("\n")
+            print("tweet_id: ","\ndate: ", tweet["date"], "\ncontent: ", tweet["content"], "\nusername: ", tweet["user"]["username"], "\n")
+            
+        else:
+            print(f"Tweet ID: {tweet['id']}")
+            print(f"Date: {tweet['date']}")
+            print(f"Content: {tweet['content']}")
+            print(f"Username: {tweet['user']['username']}")
         
         # Print the selected field and its value
         selected_field_value = tweet.get(field, None)
