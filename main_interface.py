@@ -13,7 +13,7 @@ def main():
     main_loop = True
     while main_loop:
         print("\n//////// MAIN_MENU ////////\n")
-        print("\n1. search for tweets \n2. search for users \n3. list top tweets \n4. list top users \n5. compose a tweet \n6. exit")
+        print("\n1. search for tweets \n2. search for users \n3. list top tweets \n4. list top users \n5. compose a tweet \n6. log out")
         choices = {"1": "search_tweets", "2": "search_users", "3": "list_top_tweets", "4": "list_top_users", "5": "compose_tweet", "6": "exit"}
         choice = input("\nPlease enter your choice: ")
         if choice in choices:
