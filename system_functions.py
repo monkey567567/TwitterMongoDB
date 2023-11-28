@@ -51,17 +51,23 @@ def list_tweets(collection):
     print("\n//////// LIST TOP TWEETS ////////\n")
 
     # Get user input for the field and number of tweets to display
-    print(("-")*30+"\n"+"1: retweetCount\n2: likeCount\n3: quoteCount"+"\n"+("-")*30)
-    user_choice = input("Input: ")
+    while True:
+        try:
+            print(("-")*30+"\n"+"1: retweetCount\n2: likeCount\n3: quoteCount"+"\n"+("-")*30)
+            user_choice = input("Input: ")
 
-    # Map user's input to the corresponding field
-    field_mapping = {"1": "retweetCount", "2": "likeCount", "3": "quoteCount"}
-    field = field_mapping.get(user_choice)
+            # Map user's input to the corresponding field
+            field_mapping = {"1": "retweetCount", "2": "likeCount", "3": "quoteCount"}
+            field = field_mapping.get(user_choice)
 
-    # Validate user input
-    if not field:
-        print("Invalid choice. Please enter 1, 2, or 3.")
-        return
+            # Validate user input
+            if field:
+                break
+            else:
+                print("Invalid choice. Please enter 1, 2, or 3.")
+        except ValueError:
+            print("Invalid choice. Please enter 1, 2, or 3.")
+           
 
     while True:
         try:
