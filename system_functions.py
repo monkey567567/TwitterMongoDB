@@ -87,6 +87,7 @@ def list_tweets(collection):
         field_mapping = {"1": "retweetCount", "2": "likeCount", "3": "quoteCount"}
         field = field_mapping.get(user_choice)
 
+
         # Validate user input
         if not field:
             print("Invalid choice. Please enter 1, 2, or 3.")
@@ -115,12 +116,17 @@ def list_tweets(collection):
         field: 1
     }
 
-    # Sort by the selected field in descending order
-    sort_field = "-" + field
+    # Retrieve the top N tweets based on the selected field, ordered in descending order
+    top_tweets_cursor = collection.find({}, projection).sort(field, pymongo.DESCENDING).limit(n)
+
+    # Create a list from the cursor to allow multiple iterations
+    top_tweets = list(top_tweets_cursor)
+
 
     # Retrieve the top N tweets based on the selected field
     top_tweets = collection.find({}, projection).sort(field, -1).limit(n)
     top_tweets = list(top_tweets)
+
     print("------------------------")
     # Display the streamlined results
     for tweet in top_tweets:
@@ -134,6 +140,7 @@ def list_tweets(collection):
         print(f"Selected Field ({field}): {selected_field_value}")
         
         print("------------------------")
+
 
     running3 = True
     while running3:
@@ -149,6 +156,7 @@ def list_tweets(collection):
                     running3 = False
             else:
                 print("\nTweet not in the list above.")
+
 
 def list_users(tweetscollection):
     # This function displays the top n users based on followersCount (n is inputted by the user)
