@@ -174,7 +174,7 @@ def list_users(tweetscollection):
         else:
             break
     # sort the documents by followersCount
-    results = tweetscollection.find().sort("user.followersCount", -1).limit(n)
+    results = tweetscollection.find().sort("user.followersCount", -1)
     
     shown = []  # keep track of possible duplicates
     i = 0
@@ -184,8 +184,7 @@ def list_users(tweetscollection):
         if results[i]["user"]["username"] not in shown:
             shown.append(results[i]["user"]["username"])
             print("Username: %s" % results[i]["user"]["username"])
-            if results[i]["user"]["displayname"]:
-                print("Display name: %s" % results[i]["user"]["displayname"])
+            print("Display name: %s" % results[i]["user"]["displayname"])
             print("Followers count: %d" % results[i]["user"]["followersCount"])
             print("")
             limit += 1
