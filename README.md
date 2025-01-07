@@ -1,4 +1,3 @@
-assignment_repo_id=12870759&assignment_repo_type=AssignmentRepo)
 # CMPUT 291 Project 2 - Fall 2023  
 Group member names and ccids (3-4 members)  
   nad, Khym Nad  
