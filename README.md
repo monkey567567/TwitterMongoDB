@@ -128,7 +128,4 @@ This project simulates a basic Twitter-like functionality using Python and Mongo
 - Python 3.x
 - MongoDB server
 
-### Dependencies
-Install required Python libraries using:
-```bash
-pip install -r requirements.txt
+
